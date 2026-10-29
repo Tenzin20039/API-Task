@@ -3,31 +3,199 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Task List</title>
+  <title>Task Dashboard</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <!-- The dining room: what guests see. All data comes from the kitchen (the API). -->
-  <main class="card">
-    <h1>Task List</h1>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8" /><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9" /></svg>
+        </span>
+        <span class="brand-name">TaskFlow</span>
+      </div>
 
-    <form id="task-form">
-      <input id="task-input" type="text" placeholder="What needs doing?" maxlength="255" autocomplete="off" />
-      <button type="submit">Add</button>
-    </form>
+      <nav class="nav">
+        <button class="nav-item active" data-view="dashboard">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5" /><rect x="14" y="3" width="7" height="5" rx="1.5" /><rect x="14" y="12" width="7" height="9" rx="1.5" /><rect x="3" y="16" width="7" height="5" rx="1.5" /></svg>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-view="tasks">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11" /><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" /></svg>
+          <span>All tasks</span>
+          <span id="nav-count" class="nav-badge">0</span>
+        </button>
+      </nav>
 
-    <p id="message" class="message" hidden></p>
+      <div class="sidebar-footer">
+        <div class="palette" role="group" aria-label="Colour theme">
+          <span class="palette-label">Theme</span>
+          <button class="swatch-btn" data-accent="violet" style="--c: #6250d6" aria-label="Violet theme" title="Violet"></button>
+          <button class="swatch-btn" data-accent="ocean" style="--c: #0b7cc1" aria-label="Ocean theme" title="Ocean"></button>
+          <button class="swatch-btn" data-accent="sunset" style="--c: #e8590c" aria-label="Sunset theme" title="Sunset"></button>
+          <button class="swatch-btn" data-accent="forest" style="--c: #138a5a" aria-label="Forest theme" title="Forest"></button>
+          <button class="swatch-btn" data-accent="rose" style="--c: #d6336c" aria-label="Rose theme" title="Rose"></button>
+        </div>
+        <div id="api-status" class="api-status" title="Connection to the API">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="api-status-text">Connecting…</span>
+        </div>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Switch light or dark mode">
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+          <span id="theme-label">Dark mode</span>
+        </button>
+      </div>
+    </aside>
 
-    <div class="filters">
-      <button class="filter active" data-filter="all">All</button>
-      <button class="filter" data-filter="active">Active</button>
-      <button class="filter" data-filter="done">Done</button>
-      <span id="count" class="count"></span>
-    </div>
+    <main class="main">
+      <p id="message" class="message" role="alert" hidden></p>
 
-    <ul id="task-list"></ul>
-    <p id="empty" class="empty" hidden>No tasks here yet.</p>
-  </main>
+      <!-- ===================== DASHBOARD VIEW ===================== -->
+      <section id="view-dashboard" class="view">
+        <div class="hero">
+          <div class="hero-text">
+            <p id="hero-date" class="hero-date"></p>
+            <h1 id="hero-greeting">Hello!</h1>
+            <p id="hero-summary" class="hero-summary">Loading your tasks…</p>
+          </div>
+          <form class="add-form hero-form">
+            <input type="text" placeholder="Add a new task…" maxlength="255" autocomplete="off" aria-label="New task title" />
+            <button type="submit">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+              Add task
+            </button>
+          </form>
+        </div>
+
+        <div class="stats">
+          <div class="stat stat-blue">
+            <span class="stat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 8h8M8 12h8M8 16h5" /></svg>
+            </span>
+            <div>
+              <p class="stat-label">Total tasks</p>
+              <p id="stat-total" class="stat-value">0</p>
+            </div>
+          </div>
+          <div class="stat stat-aqua">
+            <span class="stat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M8 12l3 3 5-6" /></svg>
+            </span>
+            <div>
+              <p class="stat-label">Completed</p>
+              <p id="stat-done" class="stat-value">0</p>
+            </div>
+          </div>
+          <div class="stat stat-orange">
+            <span class="stat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+            </span>
+            <div>
+              <p class="stat-label">In progress</p>
+              <p id="stat-active" class="stat-value">0</p>
+            </div>
+          </div>
+          <div class="stat stat-violet">
+            <span class="stat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
+            </span>
+            <div>
+              <p class="stat-label">Completion rate</p>
+              <p id="stat-rate" class="stat-value">0%</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Progress</h2>
+              <p class="panel-sub">Completed vs still to do</p>
+            </div>
+            <div class="donut-wrap">
+              <svg id="donut" class="donut" viewBox="0 0 140 140" role="img" aria-label="Completion chart"></svg>
+              <div class="donut-center">
+                <span id="donut-pct" class="donut-pct">0%</span>
+                <span class="donut-caption">done</span>
+              </div>
+            </div>
+            <ul class="legend">
+              <li><span class="swatch swatch-done"></span>Completed <strong id="legend-done">0</strong></li>
+              <li><span class="swatch swatch-active"></span>To do <strong id="legend-active">0</strong></li>
+            </ul>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Tasks added</h2>
+              <p class="panel-sub">Last 7 days</p>
+            </div>
+            <div class="chart-wrap">
+              <svg id="bar-chart" class="bar-chart" viewBox="0 0 420 200" role="img" aria-label="Tasks added per day, last 7 days"></svg>
+              <p id="chart-note" class="chart-note" hidden></p>
+            </div>
+            <details class="table-view">
+              <summary>View as table</summary>
+              <table>
+                <thead><tr><th>Day</th><th>Tasks added</th></tr></thead>
+                <tbody id="chart-table"></tbody>
+              </table>
+            </details>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head row">
+            <div>
+              <h2>Recent tasks</h2>
+              <p class="panel-sub">The 5 newest</p>
+            </div>
+            <button class="link-button" data-view="tasks">View all →</button>
+          </div>
+          <ul id="recent-list" class="task-list"></ul>
+          <p id="recent-empty" class="empty" hidden>No tasks yet. Add your first one above.</p>
+        </div>
+      </section>
+
+      <!-- ===================== ALL TASKS VIEW ===================== -->
+      <section id="view-tasks" class="view" hidden>
+        <div class="page-head">
+          <h1>All tasks</h1>
+          <p id="tasks-count" class="panel-sub"></p>
+        </div>
+
+        <div class="panel">
+          <form class="add-form">
+            <input type="text" placeholder="What needs doing?" maxlength="255" autocomplete="off" aria-label="New task title" />
+            <button type="submit">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+              Add
+            </button>
+          </form>
+
+          <div class="toolbar">
+            <div class="search">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+              <input id="search" type="search" placeholder="Search tasks…" aria-label="Search tasks" />
+            </div>
+            <div class="filters" role="group" aria-label="Filter tasks">
+              <button class="filter active" data-filter="all">All</button>
+              <button class="filter" data-filter="active">To do</button>
+              <button class="filter" data-filter="done">Done</button>
+            </div>
+          </div>
+
+          <ul id="task-list" class="task-list"></ul>
+          <p id="empty" class="empty" hidden>No tasks match.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
 
   <script src="app.js"></script>
 </body>
